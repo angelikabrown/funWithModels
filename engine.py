@@ -160,7 +160,7 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.fr
     
     #convert to a pandas dataframe
     updated_listening_duration_pd = duration_grouped.toPandas()
-    print(updated_listening_duration.show(5))
+  
     return updated_listening_duration_pd
 
 

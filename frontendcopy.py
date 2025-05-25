@@ -175,8 +175,7 @@ with tab2:
                 # listen graph creation
                 listen_duration = user_list(_df=clean_listen, state=st.session_state.location)
                 chart_state = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
-                #show first 5 rows of the dataframe
-                st.write(listen_duration.head())
+                
                 #create the line graph
                 line_fig = px.line(
                     listen_duration,
@@ -237,11 +236,7 @@ with tab2:
 
                 st.plotly_chart(line_fig)
 
-                if st.button("🔄 Refresh AI Summary"):
-                    if "summary" in st.session_state:
-                        del st.session_state["summary"]
-                    engine.build_prompt_from_dataframe.clear()
-                    st.rerun()
+ 
                 try:
                 # Load model after Spark and data prep
                     tokenizer, model = load_flan_model()
@@ -254,7 +249,7 @@ with tab2:
                         with st.spinner("Generating summary..."):   
                             # Tokenize and generate summary
                             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                            outputs = model.generate(**inputs, max_length=30, min_length=20, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
+                            outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
                             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                             
