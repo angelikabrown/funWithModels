@@ -1,13 +1,14 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
-import enginecopy
+import engine
 import plotly.graph_objects as go
 import altair as alt
 import requests
 import tempfile
 import time
-
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+import torch
 
 
 
@@ -59,6 +60,15 @@ def top_free(_df, state):
 @st.cache_data
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
+@st.cache_data
+def build_prommpt_from_dataframe(_df):
+    return engine.build_prompt_from_dataframe(df=_df)
+#load the model
+@st.cache_resource
+def load_flan_model():
+    tokenizer = T5Tokenizer.from_pretrained("t5-small")
+    model = T5ForConditionalGeneration.from_pretrained("t5-small")
+    return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -111,11 +121,6 @@ def render_map(artist):
             st.rerun()
 
 ### ------------------ MAIN UI: TAB 1 ------------------
-with tab1:
-    # Center the image using columns
-    col1, col2, col3 = st.columns([1, 8, 1])
-    with col2:
-        st.image('MuseDash_Pipeline.png', caption='Pipeline')
 
 
 ### ------------------ MAIN UI: TAB 2 ------------------
@@ -227,6 +232,28 @@ with tab2:
                 )
 
                 st.plotly_chart(line_fig)
+                try:
+                # Load model after Spark and data prep
+                    tokenizer, model = load_flan_model()
+
+                    # Generate summary prompt
+                    if not filtered_b.empty:
+                        prompt_text = engine.build_prompt_from_dataframe(filtered_b)
+                        with st.spinner("Generating summary..."):   
+                            # Tokenize and generate summary
+                            inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+                            outputs = model.generate(**inputs, max_length=100, min_length=50, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
+                            summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+                            
+                            st.write(summary)
+                            st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
+
+                    else:
+                            st.info("No data available to summarize for selected filters.")
+                except Exception as e:
+                    st.error(f"Error loading model or generating summary: {e}")
+                    st.write("Please check your model and data.")
                 
         with col_table[1]:
             with st.container(border=True):
@@ -321,8 +348,4 @@ with tab2:
 
 
 ### ------------------ MAIN UI: TAB 23 ------------------
-with tab3:
-    # Center the image using columns
-    col1, col2, col3 = st.columns([1, 5, 1])
-    with col2:
-        st.image('MuseDash_QR.png', caption='Repo')
+

@@ -2,8 +2,13 @@ import pandas as pd
 import pyspark
 from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+import torch
 
-
+def load_flan_model():
+    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")
+    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-large")
+    return tokenizer, model
 ############
 # Kunle
 ############
@@ -346,4 +351,39 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
     
     return top_songs_pd
 
+def build_prompt_from_dataframe(df):
+    if df.empty:
+        return "No listening data available to summarize."
 
+    # Convert total_duration to numeric
+    df["total_duration"] = pd.to_numeric(df["total_duration"], errors="coerce")
+
+    total_duration_all = df["total_duration"].sum()
+    max_row = df.loc[df["total_duration"].idxmax()]
+    max_month = max_row["month_name"]
+    max_subscription = max_row["subscription"]
+    max_duration = max_row["total_duration"]
+
+    min_row = df.loc[df["total_duration"].idxmin()]
+    min_month = min_row["month_name"]
+    min_subscription = min_row["subscription"]
+    min_duration = min_row["total_duration"]
+    avg_min = df[df["month_name"] == min_month]["total_duration"].mean()
+
+    breakdown = df[df["month_name"] == max_month].groupby("subscription")["total_duration"].sum().to_dict()
+
+    breakdown_str = "; ".join([f"{k}: {v:.2f}" for k, v in breakdown.items()])
+
+    prompt = f"""
+                You are analyzing streaming data. Focus on subscription types and listening duration. I want the highest listening throughout the 12 months. Start with the most popular month.
+
+                Here are the facts:
+                - Total listening duration across all selected months: {total_duration_all:.2f} seconds.
+                - Month with highest listening: {max_month} ({max_subscription}) with {max_duration:.2f} seconds.
+                - Month with lowest listening: {min_month} ({min_subscription}) with {min_duration:.2f} seconds.
+                - Average duration in {min_month}: {avg_min:.2f} seconds.
+                - In {max_month}, total duration by subscription: {breakdown_str}.
+
+                Write a clear summary of the listening behavior based on this information.
+                """
+    return prompt.strip()
