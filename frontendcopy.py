@@ -237,8 +237,8 @@ with tab2:
                     tokenizer, model = load_flan_model()
 
                     # Generate summary prompt
-                    if not filtered_b.empty:
-                        prompt_text = engine.build_prompt_from_dataframe(filtered_b)
+                    if not listen_duration.empty:
+                        prompt_text = engine.build_prompt_from_dataframe(listen_duration)
                         with st.spinner("Generating summary..."):   
                             # Tokenize and generate summary
                             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
