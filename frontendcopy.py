@@ -61,12 +61,12 @@ def top_free(_df, state):
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
 
-@st.cache_data
+# @st.cache_data
 def build_prommpt_from_dataframe(_df):
     return engine.build_prompt_from_dataframe(df=_df)
 
 #load the model
-@st.cache_resource
+# @st.cache_resource
 def load_flan_model():
     tokenizer = T5Tokenizer.from_pretrained("t5-small")
     model = T5ForConditionalGeneration.from_pretrained("t5-small")
@@ -236,6 +236,12 @@ with tab2:
                 )
 
                 st.plotly_chart(line_fig)
+
+                if st.button("🔄 Refresh AI Summary"):
+                    if "summary" in st.session_state:
+                        del st.session_state["summary"]
+                    engine.build_prompt_from_dataframe.clear()
+                    st.rerun()
                 try:
                 # Load model after Spark and data prep
                     tokenizer, model = load_flan_model()

@@ -353,37 +353,37 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
 
 def build_prompt_from_dataframe(df):
     if df.empty:
-        return "No listening data available to summarize."
+        return "No listening data is available for the selected filters."
 
-    # Convert total_duration to numeric
+    # Make sure total_duration is numeric
     df["total_duration"] = pd.to_numeric(df["total_duration"], errors="coerce")
 
-    total_duration_all = df["total_duration"].sum()
-    max_row = df.loc[df["total_duration"].idxmax()]
-    max_month = max_row["month_name"]
-    max_subscription = max_row["subscription"]
-    max_duration = max_row["total_duration"]
+    # Basic stats
+    total_minutes = df["total_duration"].sum()
+    avg_per_month = df.groupby("month_name")["total_duration"].sum().mean()
 
-    min_row = df.loc[df["total_duration"].idxmin()]
-    min_month = min_row["month_name"]
-    min_subscription = min_row["subscription"]
-    min_duration = min_row["total_duration"]
-    avg_min = df[df["month_name"] == min_month]["total_duration"].mean()
+    # Peak and lowest listening month
+    monthly_totals = df.groupby("month_name")["total_duration"].sum()
+    peak_month = monthly_totals.idxmax()
+    peak_value = monthly_totals.max()
 
-    breakdown = df[df["month_name"] == max_month].groupby("subscription")["total_duration"].sum().to_dict()
+    low_month = monthly_totals.idxmin()
+    low_value = monthly_totals.min()
 
-    breakdown_str = "; ".join([f"{k}: {v:.2f}" for k, v in breakdown.items()])
+    # Breakdown in peak month by subscription
+    peak_breakdown = df[df["month_name"] == peak_month].groupby("subscription")["total_duration"].sum().to_dict()
+    peak_breakdown_str = ", ".join(f"{k}: {v:.0f}" for k, v in peak_breakdown.items())
 
     prompt = f"""
-                You are analyzing streaming data. Focus on subscription types and listening duration. I want the highest listening throughout the 12 months. Start with the most popular month.
+            You are analyzing streaming data. Focus on subscription types and listening duration. I want the highest listening throughout the 12 months. Start with the most popular month.
 
-                Here are the facts:
-                - Total listening duration across all selected months: {total_duration_all:.2f} seconds.
-                - Month with highest listening: {max_month} ({max_subscription}) with {max_duration:.2f} seconds.
-                - Month with lowest listening: {min_month} ({min_subscription}) with {min_duration:.2f} seconds.
-                - Average duration in {min_month}: {avg_min:.2f} seconds.
-                - In {max_month}, total duration by subscription: {breakdown_str}.
+            Here is a summary of the data:
+            - Total listening time: {total_minutes:.0f} minutes
+            - Average monthly listening: {avg_per_month:.0f} minutes
+            - Peak month: {peak_month} with {peak_value:.0f} minutes
+            - Lowest month: {low_month} with {low_value:.0f} minutes
+            - Listening breakdown in {peak_month}: {peak_breakdown_str}
 
-                Write a clear summary of the listening behavior based on this information.
-                """
+            Write a clear summary of the listening behavior based on this information.
+            """
     return prompt.strip()
