@@ -254,7 +254,7 @@ with tab2:
                         with st.spinner("Generating summary..."):   
                             # Tokenize and generate summary
                             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                            outputs = model.generate(**inputs, max_length=50, min_length=30, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
+                            outputs = model.generate(**inputs, max_length=30, min_length=20, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
                             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                             

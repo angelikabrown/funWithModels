@@ -355,35 +355,30 @@ def build_prompt_from_dataframe(df):
     if df.empty:
         return "No listening data is available for the selected filters."
 
-    # Make sure total_duration is numeric
     df["total_duration"] = pd.to_numeric(df["total_duration"], errors="coerce")
 
-    # Basic stats
     total_minutes = df["total_duration"].sum()
     avg_per_month = df.groupby("month_name")["total_duration"].sum().mean()
 
-    # Peak and lowest listening month
     monthly_totals = df.groupby("month_name")["total_duration"].sum()
     peak_month = monthly_totals.idxmax()
     peak_value = monthly_totals.max()
-
     low_month = monthly_totals.idxmin()
     low_value = monthly_totals.min()
 
-    # Breakdown in peak month by subscription
     peak_breakdown = df[df["month_name"] == peak_month].groupby("subscription")["total_duration"].sum().to_dict()
     peak_breakdown_str = ", ".join(f"{k}: {v:.0f}" for k, v in peak_breakdown.items())
 
-    prompt = f"""
-            You are analyzing streaming data. Focus on subscription types and listening duration. I want the highest listening throughout the 12 months. Start with the most popular month.
+    # Compose the data summary as plain text (no instructions embedded inside)
+    data_summary = (
+        f"Total listening time is {total_minutes:.0f} minutes. "
+        f"Average monthly listening is {avg_per_month:.0f} minutes. "
+        f"The peak month is {peak_month} with {peak_value:.0f} minutes. "
+        f"The lowest month is {low_month} with {low_value:.0f} minutes. "
+        f"In the peak month, listening breakdown is: {peak_breakdown_str}."
+    )
 
-            Here is a summary of the data:
-            - Total listening time: {total_minutes:.0f} minutes
-            - Average monthly listening: {avg_per_month:.0f} minutes
-            - Peak month: {peak_month} with {peak_value:.0f} minutes
-            - Lowest month: {low_month} with {low_value:.0f} minutes
-            - Listening breakdown in {peak_month}: {peak_breakdown_str}
+    # Add the t5 prefix for summarization task
+    prompt = "summarize: " + data_summary
 
-            Write a clear summary of the listening behavior based on this information.
-            """
-    return prompt.strip()
+    return prompt
