@@ -60,9 +60,11 @@ def top_free(_df, state):
 @st.cache_data
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
+
 @st.cache_data
 def build_prommpt_from_dataframe(_df):
     return engine.build_prompt_from_dataframe(df=_df)
+
 #load the model
 @st.cache_resource
 def load_flan_model():
@@ -169,10 +171,12 @@ with tab2:
                         st.metric("Total Paid Listening", f"{round(kpi_data[2]/3600000)}k+ H")
             
             with st.container(border=True):
+               
                 # listen graph creation
                 listen_duration = user_list(_df=clean_listen, state=st.session_state.location)
                 chart_state = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
-                    
+                #show first 5 rows of the dataframe
+                st.write(listen_duration.head())
                 #create the line graph
                 line_fig = px.line(
                     listen_duration,
@@ -236,13 +240,15 @@ with tab2:
                 # Load model after Spark and data prep
                     tokenizer, model = load_flan_model()
 
+                    prompt_text = engine.build_prompt_from_dataframe(listen_duration)
+
                     # Generate summary prompt
                     if not listen_duration.empty:
                         prompt_text = engine.build_prompt_from_dataframe(listen_duration)
                         with st.spinner("Generating summary..."):   
                             # Tokenize and generate summary
                             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                            outputs = model.generate(**inputs, max_length=100, min_length=50, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
+                            outputs = model.generate(**inputs, max_length=50, min_length=30, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
                             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                             
