@@ -355,7 +355,7 @@ def build_prompt_from_dataframe(df):
     """
 
     Builds a prompt for summarization from the provided DataFrame.
-    
+
     """
     if df.empty:
         return "No listening data is available for the selected filters."
@@ -381,6 +381,42 @@ def build_prompt_from_dataframe(df):
         f"The peak month is {peak_month} with {peak_value:.0f} minutes. "
         f"The lowest month is {low_month} with {low_value:.0f} minutes. "
         f"In the peak month, listening breakdown is: {peak_breakdown_str}."
+    )
+
+    # Add the t5 prefix for summarization task
+    prompt = "summarize: " + data_summary
+
+    return prompt
+
+def build_prompt_from_map(df):
+    """
+
+    Builds a prompt for summarization from the map DataFrame.
+    
+    """
+    if df.empty:
+        return "No listening data is available for the selected filters."
+
+    df["listens"] = pd.to_numeric(df["listens"], errors="coerce")
+    total_listens = df["listens"].sum()
+    avg_listens = df["listens"].mean()
+    top_artist = df.loc[df["listens"].idxmax(), "artist"]
+    top_artist_listens = df["listens"].max()
+    low_artist = df.loc[df["listens"].idxmin(), "artist"]
+    low_artist_listens = df["listens"].min()
+    top_state = df.loc[df["listens"].idxmax(), "state"]
+    top_state_listens = df["listens"].max()
+    low_state = df.loc[df["listens"].idxmin(), "state"]
+    low_state_listens = df["listens"].min()
+    
+    # Compose the data summary as plain text (no instructions embedded inside)
+    data_summary = (
+        f"Total listens: {total_listens:.0f}. "
+        f"Average listens per artist: {avg_listens:.0f}. "
+        f"Top artist: {top_artist} with {top_artist_listens:.0f} listens. "
+        f"Lowest artist: {low_artist} with {low_artist_listens:.0f} listens. "
+        f"Top state: {top_state} with {top_state_listens:.0f} listens. "
+        f"Lowest state: {low_state} with {low_state_listens:.0f} listens."
     )
 
     # Add the t5 prefix for summarization task
