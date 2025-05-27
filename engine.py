@@ -410,7 +410,7 @@ def build_prompt_from_map(df, state: str):
 
     # Compose the data summary as plain text (no instructions embedded inside)
     data_summary = (
-        f"Total listens: {total_listens:.0f}."
+        f"Total listens Nationwide: {total_listens:.0f}."
         f"Total listens in {state}: {total_state_listens:.0f}."
         f"Average listens in {state}: {avg_state_listens:.0f}."
         f"Top state: {top_state} with {top_state_listens:.0f} listens."
