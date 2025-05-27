@@ -131,14 +131,14 @@ def render_map(artist):
         # Load model after Spark and data prep
         tokenizer, model = load_flan_model()
 
-        prompt_text = engine.build_prompt_from_map(c)
+        prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
         # Generate summary prompt
         if not c.empty:
-            prompt_text = engine.build_prompt_from_map(c)
+            prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
             with st.spinner("Generating summary..."):   
                 # Tokenize and generate summary
                 inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                outputs = model.generate(**inputs, max_length=100, min_length=50, do_sample=True, top_p=0.95, top_k=50)
+                outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
                 summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                 
