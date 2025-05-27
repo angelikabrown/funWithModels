@@ -352,6 +352,11 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
     return top_songs_pd
 
 def build_prompt_from_dataframe(df):
+    """
+
+    Builds a prompt for summarization from the provided DataFrame.
+    
+    """
     if df.empty:
         return "No listening data is available for the selected filters."
 

@@ -93,7 +93,12 @@ clean_listen = get_clean_data()
 
 def render_map(artist):
     c = get_map_data(clean_listen, artist)
-
+    #show first 5 rows of the map data
+    if c.empty:
+        st.error(f"No data available for artist: {artist}")
+        return
+    st.write(c.head(5))
+    
     fig = go.Figure(data=go.Choropleth(
         locations=c.state,
         z=c.listens,
