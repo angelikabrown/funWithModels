@@ -138,7 +138,7 @@ def render_map(artist):
             with st.spinner("Generating summary..."):   
                 # Tokenize and generate summary
                 inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
+                outputs = model.generate(**inputs, max_length=100, min_length=50, do_sample=True, top_p=0.95, top_k=50)
                 summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                 

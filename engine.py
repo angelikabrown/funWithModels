@@ -399,22 +399,22 @@ def build_prompt_from_map(df):
 
     df["listens"] = pd.to_numeric(df["listens"], errors="coerce")
     total_listens = df["listens"].sum()
+    #total listens in selected state
+    total_state_listens = df["listens"].sum() if "state" in df.columns else total_listens
     avg_listens = df["listens"].mean()
-    top_artist = df.loc[df["listens"].idxmax(), "artist"]
-    top_artist_listens = df["listens"].max()
-    low_artist = df.loc[df["listens"].idxmin(), "artist"]
-    low_artist_listens = df["listens"].min()
+    avg_state_listens = df["listens"].mean() if "state" in df.columns else avg_listens
+
     top_state = df.loc[df["listens"].idxmax(), "state"]
     top_state_listens = df["listens"].max()
     low_state = df.loc[df["listens"].idxmin(), "state"]
     low_state_listens = df["listens"].min()
-    
+
     # Compose the data summary as plain text (no instructions embedded inside)
     data_summary = (
         f"Total listens: {total_listens:.0f}. "
-        f"Average listens per artist: {avg_listens:.0f}. "
-        f"Top artist: {top_artist} with {top_artist_listens:.0f} listens. "
-        f"Lowest artist: {low_artist} with {low_artist_listens:.0f} listens. "
+        f"Average listens: {avg_listens:.0f}. "
+        f"Total listens in selected state: {total_state_listens:.0f}. "
+        f"Average listens in selected state: {avg_state_listens:.0f}. "
         f"Top state: {top_state} with {top_state_listens:.0f} listens. "
         f"Lowest state: {low_state} with {low_state_listens:.0f} listens."
     )
