@@ -65,11 +65,17 @@ def create_pie(_df, state):
 def build_prommpt_from_dataframe(_df):
     return engine.build_prompt_from_dataframe(df=_df)
 
-#load the model
+#load t5-small model
 @st.cache_resource
 def load_flan_model():
     tokenizer = T5Tokenizer.from_pretrained("t5-small")
     model = T5ForConditionalGeneration.from_pretrained("t5-small")
+    return tokenizer, model
+
+#load tapas model
+def load_tapas_model():
+    tokenizer = T5Tokenizer.from_pretrained("google/tapas-large-finetuned-wtq")
+    model = T5ForConditionalGeneration.from_pretrained("google/tapas-large-finetuned-wtq")
     return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
@@ -126,6 +132,9 @@ def render_map(artist):
         if st.session_state.location != "Nationwide":
             st.session_state.location = "Nationwide"
             st.rerun()
+
+# load Tapas model
+
 
     # try:
     #     # Load model after Spark and data prep
