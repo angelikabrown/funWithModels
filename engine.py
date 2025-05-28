@@ -388,36 +388,36 @@ def build_prompt_from_dataframe(df):
 
     return prompt
 
-def build_prompt_from_map(df, state: str):
-    """
+# def build_prompt_from_map(df, state: str):
+#     """
 
-    Builds a prompt for summarization from the map DataFrame.
+#     Builds a prompt for summarization from the map DataFrame.
     
-    """
-    if df.empty:
-        return "No listening data is available for the selected filters."
+#     """
+#     if df.empty:
+#         return "No listening data is available for the selected filters."
 
-    df["listens"] = pd.to_numeric(df["listens"], errors="coerce")
-    total_listens = df["listens"].sum()
-    total_state_listens = df["listens"].sum() if "state" in df.columns else total_listens
-    avg_listens = df["listens"].mean()
-    avg_state_listens = df["listens"].mean() if "state" in df.columns else avg_listens
+#     df["listens"] = pd.to_numeric(df["listens"], errors="coerce")
+#     total_listens = df["listens"].sum()
+#     total_state_listens = df["listens"].sum() if "state" in df.columns else total_listens
+#     avg_listens = df["listens"].mean()
+#     avg_state_listens = df["listens"].mean() if "state" in df.columns else avg_listens
 
-    top_state = df.loc[df["listens"].idxmax(), "state"]
-    top_state_listens = df["listens"].max()
-    low_state = df.loc[df["listens"].idxmin(), "state"]
-    low_state_listens = df["listens"].min()
+#     top_state = df.loc[df["listens"].idxmax(), "state"]
+#     top_state_listens = df["listens"].max()
+#     low_state = df.loc[df["listens"].idxmin(), "state"]
+#     low_state_listens = df["listens"].min()
 
-    # Compose the data summary as plain text (no instructions embedded inside)
-    data_summary = (
-        f"Total listens Nationwide: {total_listens:.0f}."
-        f"Total listens in {state}: {total_state_listens:.0f}."
-        f"Average listens in {state}: {avg_state_listens:.0f}."
-        f"Top state: {top_state} with {top_state_listens:.0f} listens."
-        f"Lowest state: {low_state} with {low_state_listens:.0f} listens."
-    )
+#     # Compose the data summary as plain text (no instructions embedded inside)
+#     data_summary = (
+#         f"Total listens Nationwide: {total_listens:.0f}."
+#         f"Total listens in {state}: {total_state_listens:.0f}."
+#         f"Average listens in {state}: {avg_state_listens:.0f}."
+#         f"Top state: {top_state} with {top_state_listens:.0f} listens."
+#         f"Lowest state: {low_state} with {low_state_listens:.0f} listens."
+#     )
 
-    # Add the t5 prefix for summarization task
-    prompt = "summarize: " + data_summary
+#     # Add the t5 prefix for summarization task
+#     prompt = "summarize: " + data_summary
 
-    return prompt
+#     return prompt
