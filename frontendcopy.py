@@ -73,6 +73,7 @@ def load_flan_model():
     return tokenizer, model
 
 #load tapas model
+@st.cache_resource
 def load_tapas_model():
     tokenizer = T5Tokenizer.from_pretrained("google/tapas-large-finetuned-wtq")
     model = T5ForConditionalGeneration.from_pretrained("google/tapas-large-finetuned-wtq")
