@@ -127,28 +127,28 @@ def render_map(artist):
             st.session_state.location = "Nationwide"
             st.rerun()
 
-    try:
-        # Load model after Spark and data prep
-        tokenizer, model = load_flan_model()
+    # try:
+    #     # Load model after Spark and data prep
+    #     tokenizer, model = load_flan_model()
 
-        prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-        # Generate summary prompt
-        if not c.empty:
-            prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-            with st.spinner("Generating summary..."):   
-                # Tokenize and generate summary
-                inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
-                summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    #     prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
+    #     # Generate summary prompt
+    #     if not c.empty:
+    #         prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
+    #         with st.spinner("Generating summary..."):   
+    #             # Tokenize and generate summary
+    #             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+    #             outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
+    #             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                 
-                st.write(summary)
-                st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
-        else:
-            st.info("No data available to summarize for selected filters.")
-    except Exception as e:
-        st.error(f"Error loading model or generating summary: {e}")
-        st.write("Please check your model and data.")
+    #             st.write(summary)
+    #             st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
+    #     else:
+    #         st.info("No data available to summarize for selected filters.")
+    # except Exception as e:
+    #     st.error(f"Error loading model or generating summary: {e}")
+    #     st.write("Please check your model and data.")
 
 ### ------------------ MAIN UI: TAB 1 ------------------
 
