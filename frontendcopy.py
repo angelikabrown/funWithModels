@@ -7,7 +7,7 @@ import altair as alt
 import requests
 import tempfile
 import time
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import T5Tokenizer, T5ForConditionalGeneration, TapasTokenizer, TapasForQuestionAnswering
 import torch
 
 
@@ -75,8 +75,8 @@ def load_flan_model():
 #load tapas model
 @st.cache_resource
 def load_tapas_model():
-    tokenizer = T5Tokenizer.from_pretrained("google/tapas-large-finetuned-wtq")
-    model = T5ForConditionalGeneration.from_pretrained("google/tapas-large-finetuned-wtq")
+    tokenizer = TapasTokenizer.from_pretrained("google/tapas-large-finetuned-wtq")
+    model = TapasForQuestionAnswering.from_pretrained("google/tapas-large-finetuned-wtq")
     return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
@@ -138,19 +138,21 @@ def render_map(artist):
     try:
         tokenizer, model = load_tapas_model()
 
-        question = st.text_input("Ask a question about the data:", "What is the total number of listens?")
+        question = st.text_input("Ask a question about the data:", placeholder="e.g. How many listens in California?")
         if question:
-            df= get_map_data(clean_listen, st.session_state.option)
-            with st.spinner("Generating answer..."):
-                inputs = tokenizer(table=df, queries=[question], return_tensors="pt")
-                outputs = model(**inputs)
-                answer = tokenizer.convert_tokens_to_string(
-                    tokenizer.convert_ids_to_tokens(outputs.logits.argmax(dim=1))
-                )
-                st.markdown(f"**Answer:** {answer}")
+            try:
+                with st.spinner("Generating answer..."):
+                    # Prepare the data for Tapas model
+                    inputs = tokenizer(table=c, queries=[question], return_tensors="pt")
+                    outputs = model(**inputs)
+                    answer = tokenizer.convert_logits_to_answer(inputs, outputs.logits)[0]
+                    st.markdown(f"**Answer:** {answer}")
+            except Exception as e:
+                st.error(f"Error generating answer: {e}")
     except Exception as e:
-        st.error(f"Error loading model or generating answer: {e}")
-        st.write("Please check your model and data.")
+        st.error(f"Error loading Tapas model: {e}")
+
+
 
     # try:
     #     # Load model after Spark and data prep
