@@ -134,7 +134,8 @@ def render_map(artist):
         if st.session_state.location != "Nationwide":
             st.session_state.location = "Nationwide"
             st.rerun()
-
+    def format_number(n):
+        return f"{int(n):,}"
 # load Tapas model
     try:
         tokenizer, model = load_tapas_model()
@@ -143,25 +144,37 @@ def render_map(artist):
         if question:
             try:
                 df_str = c.astype(str)
-                with st.spinner("Generating answer..."):
-                    # Prepare the data for Tapas model
-                    inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
-                    outputs = model(**inputs)
 
-                    #extract predicted answer
-                    predicted_answer_coordinates = outputs.logits.argmax(dim=-1).tolist()
-                    predicted_answer = []
-                    for coord in predicted_answer_coordinates:
-                        if coord != -1:
-                            predicted_answer.append(df_str.iloc[coord])
-                    if predicted_answer:
-                        st.markdown(f"**Answer:** {predicted_answer}")
-                    else:
-                        st.markdown("**Answer:** No answer found.")
+                # Tokenize and run TAPAS model
+                inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
+                outputs = model(**inputs)
+
+                # Get probabilities and selected cells (threshold 0.5)
+                probs = torch.sigmoid(outputs.logits)
+                selected_coords = (probs > 0.7).nonzero()
+
+                if len(selected_coords) == 0:
+                    st.markdown("**Answer:** No answer found.")
+                else:
+                    # Get unique row indices of selected cells
+                    num_cols = df_str.shape[1]
+                    selected_rows = list(set([coord[1].item() // num_cols for coord in selected_coords]))
+
+                    # Build natural language answer for each selected row
+                    answers = []
+                    for row_idx in selected_rows:
+                        row = c.iloc[row_idx]
+                        sentence = f"In {row['state']}, {row['artist']} had {format_number(row['listens'])} listens."
+                        answers.append(sentence)
+
+                    final_answer = " ".join(answers)
+                    st.markdown(f"**Answer:** {final_answer}")
             except Exception as e:
                 st.error(f"Error generating answer: {e}")
+
     except Exception as e:
-        st.error(f"Error loading Tapas model: {e}")
+        st.error(f"Error generating answer: {e}")
+
 
 
 
