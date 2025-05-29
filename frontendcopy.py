@@ -75,8 +75,9 @@ def load_flan_model():
 #load tapas model
 @st.cache_resource
 def load_tapas_model():
-    tokenizer = TapasTokenizer.from_pretrained("google/tapas-large-finetuned-wtq")
-    model = TapasForQuestionAnswering.from_pretrained("google/tapas-large-finetuned-wtq")
+    model_name = "google/tapas-base-finetuned-wtq"
+    tokenizer = TapasTokenizer.from_pretrained(model_name)
+    model = TapasForQuestionAnswering.from_pretrained(model_name)
     return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
