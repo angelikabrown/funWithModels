@@ -7,7 +7,7 @@ import altair as alt
 import requests
 import tempfile
 import time
-from transformers import T5Tokenizer, T5ForConditionalGeneration, TapasTokenizer, TapasForQuestionAnswering
+from transformers import T5Tokenizer, T5ForConditionalGeneration, TapasTokenizer, TapasForQuestionAnswering, AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 
 
@@ -79,6 +79,12 @@ def load_tapas_model():
     tokenizer = TapasTokenizer.from_pretrained(model_name)
     model = TapasForQuestionAnswering.from_pretrained(model_name)
     return tokenizer, model
+@st.cache_resource
+def load_t5_model():
+    model_name = "google/flan-t5-small"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name).cpu()
+    return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -135,45 +141,69 @@ def render_map(artist):
             st.session_state.location = "Nationwide"
             st.rerun()
 
+        try:
+            tokenizer, model = load_t5_model()
+
+            def table_to_text(c):
+                rows = [f"In {row['state']}, {row['artist']} had {row['listens']} listens." for _, row in c.iterrows()]
+                return " ".join(rows)
+            question = st.text_input("Enter your question:", "Which state had the most listens?")
+            if question:
+                try:
+                    with st.spinner("Generating answer..."):
+                        context = table_to_text(c)
+                        prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+                        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+                        outputs = model.generate(**inputs, max_new_tokens=50)
+                        answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                        st.markdown(f"**Answer:** {answer}")
+                        st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated answer</p>", unsafe_allow_html=True)         
+
+                except Exception as e:
+                    st.error(f"Error generating answer: {e}")
+        except Exception as e:
+            st.error(f"Error loading T5 model: {e}")
+        
+
     
-    try:
-        tokenizer, model = load_tapas_model()
+    # try:
+    #     tokenizer, model = load_tapas_model()
 
-        question = ["How many listens are in CA?"]
-        if question:
-            try:
-                df_str = c.astype(str)
-                with st.spinner("Generating answer..."):
-                    # Prepare the data for Tapas model
-                    inputs = tokenizer(table=df_str, queries=question, padding="max_length", return_tensors="pt")
-                    outputs = model(**inputs)
+    #     question = ["How many listens are in CA?"]
+    #     if question:
+    #         try:
+    #             df_str = c.astype(str)
+    #             with st.spinner("Generating answer..."):
+    #                 # Prepare the data for Tapas model
+    #                 inputs = tokenizer(table=df_str, queries=question, padding="max_length", return_tensors="pt")
+    #                 outputs = model(**inputs)
 
-                    probabilities = torch.sigmoid(outputs.logits)
-                    selected_cells = (probabilities > 0.5).nonzero(as_tuple=True)
+    #                 probabilities = torch.sigmoid(outputs.logits)
+    #                 selected_cells = (probabilities > 0.5).nonzero(as_tuple=True)
 
-                    selected_rows = selected_cells[0].tolist()
-                    selected_cols = selected_cells[1].tolist()
+    #                 selected_rows = selected_cells[0].tolist()
+    #                 selected_cols = selected_cells[1].tolist()
 
-                    if selected_rows and selected_cols:
-                        # Create a DataFrame to hold the selected answers
-                        answers = []
-                        for row, col in zip(selected_rows, selected_cols):
-                            # Validate the indices before accessing the DataFrame
-                            if row < len(df_str) and col < len(df_str.columns):
-                                cell_value = df_str.iloc[row, col]
-                                answers.append(cell_value)
-                            else:
-                                st.warning(f"Skipping invalid index: row={row}, col={col}")
-                        if answers:
-                            human_readable_answer = " ".join(answers)
-                            st.markdown(f"**Answer:** {human_readable_answer}")
-                        else:
-                            st.markdown("**Answer:** No answer found.")
+    #                 if selected_rows and selected_cols:
+    #                     # Create a DataFrame to hold the selected answers
+    #                     answers = []
+    #                     for row, col in zip(selected_rows, selected_cols):
+    #                         # Validate the indices before accessing the DataFrame
+    #                         if row < len(df_str) and col < len(df_str.columns):
+    #                             cell_value = df_str.iloc[row, col]
+    #                             answers.append(cell_value)
+    #                         else:
+    #                             st.warning(f"Skipping invalid index: row={row}, col={col}")
+    #                     if answers:
+    #                         human_readable_answer = " ".join(answers)
+    #                         st.markdown(f"**Answer:** {human_readable_answer}")
+    #                     else:
+    #                         st.markdown("**Answer:** No answer found.")
             
-            except Exception as e:
-                st.error(f"Error generating answer: {e}")
-    except Exception as e:
-        st.error(f"Error loading Tapas model: {e}")
+    #         except Exception as e:
+    #             st.error(f"Error generating answer: {e}")
+    # except Exception as e:
+    #     st.error(f"Error loading Tapas model: {e}")
 
     # def format_number(n):
     #     return f"{int(n):,}"
