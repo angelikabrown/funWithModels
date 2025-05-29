@@ -143,8 +143,10 @@ def render_map(artist):
             with st.spinner("Generating answer..."):
                 inputs = tokenizer(c, question, return_tensors="pt")
                 outputs = model.generate(**inputs)
-                answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
-                st.write(f"Answer: {answer}")
+                answer = tokenizer.convert_tokens_to_string(
+                    tokenizer.convert_ids_to_tokens(outputs.logits.argmax(dim=1))
+                )
+                st.markdown(f"**Answer:** {answer}")
     except Exception as e:
         st.error(f"Error loading model or generating answer: {e}")
         st.write("Please check your model and data.")
