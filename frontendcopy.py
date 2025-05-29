@@ -134,8 +134,49 @@ def render_map(artist):
         if st.session_state.location != "Nationwide":
             st.session_state.location = "Nationwide"
             st.rerun()
-    def format_number(n):
-        return f"{int(n):,}"
+
+    
+    try:
+        tokenizer, model = load_tapas_model()
+
+        question = ["How many listens are in CA?"]
+        if question:
+            try:
+                df_str = c.astype(str)
+                with st.spinner("Generating answer..."):
+                    # Prepare the data for Tapas model
+                    inputs = tokenizer(table=df_str, queries=question, padding="max_length", return_tensors="pt")
+                    outputs = model(**inputs)
+
+                    probabilities = torch.sigmoid(outputs.logits)
+                    selected_cells = (probabilities > 0.5).nonzero(as_tuple=True)
+
+                    selected_rows = selected_cells[0].tolist()
+                    selected_cols = selected_cells[1].tolist()
+
+                    if selected_rows and selected_cols:
+                        # Create a DataFrame to hold the selected answers
+                        answers = []
+                        for row, col in zip(selected_rows, selected_cols):
+                            # Validate the indices before accessing the DataFrame
+                            if row < len(df_str) and col < len(df_str.columns):
+                                cell_value = df_str.iloc[row, col]
+                                answers.append(cell_value)
+                            else:
+                                st.warning(f"Skipping invalid index: row={row}, col={col}")
+                        if answers:
+                            human_readable_answer = " ".join(answers)
+                            st.markdown(f"**Answer:** {human_readable_answer}")
+                        else:
+                            st.markdown("**Answer:** No answer found.")
+            
+            except Exception as e:
+                st.error(f"Error generating answer: {e}")
+    except Exception as e:
+        st.error(f"Error loading Tapas model: {e}")
+
+    # def format_number(n):
+    #     return f"{int(n):,}"
 # # load Tapas model
 #     try:
 #         tokenizer, model = load_tapas_model()
@@ -186,28 +227,28 @@ def render_map(artist):
 
 
 
-    try:
-        # Load model after Spark and data prep
-        tokenizer, model = load_flan_model()
+    # try:
+    #     # Load model after Spark and data prep
+    #     tokenizer, model = load_flan_model()
 
-        prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-        # Generate summary prompt
-        if not c.empty:
-            prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-            with st.spinner("Generating summary..."):   
-                # Tokenize and generate summary
-                inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
-                summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    #     prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
+    #     # Generate summary prompt
+    #     if not c.empty:
+    #         prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
+    #         with st.spinner("Generating summary..."):   
+    #             # Tokenize and generate summary
+    #             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+    #             outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
+    #             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                 
-                st.write(summary)
-                st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
-        else:
-            st.info("No data available to summarize for selected filters.")
-    except Exception as e:
-        st.error(f"Error loading model or generating summary: {e}")
-        st.write("Please check your model and data.")
+    #             st.write(summary)
+    #             st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
+    #     else:
+    #         st.info("No data available to summarize for selected filters.")
+    # except Exception as e:
+    #     st.error(f"Error loading model or generating summary: {e}")
+    #     st.write("Please check your model and data.")
 
 ### ------------------ MAIN UI: TAB 1 ------------------
 
