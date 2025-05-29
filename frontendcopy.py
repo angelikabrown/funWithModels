@@ -140,9 +140,10 @@ def render_map(artist):
 
         question = st.text_input("Ask a question about the data:", "What is the total number of listens?")
         if question:
+            df= get_map_data(clean_listen, st.session_state.option)
             with st.spinner("Generating answer..."):
-                inputs = tokenizer(c, question, return_tensors="pt")
-                outputs = model.generate(**inputs)
+                inputs = tokenizer(table=df, queries=[question], return_tensors="pt")
+                outputs = model(**inputs)
                 answer = tokenizer.convert_tokens_to_string(
                     tokenizer.convert_ids_to_tokens(outputs.logits.argmax(dim=1))
                 )
