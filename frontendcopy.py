@@ -135,7 +135,19 @@ def render_map(artist):
             st.rerun()
 
 # load Tapas model
+    try:
+        tokenizer, model = load_tapas_model()
 
+        question = st.text_input("Ask a question about the data:", "What is the total number of listens?")
+        if question:
+            with st.spinner("Generating answer..."):
+                inputs = tokenizer(c, question, return_tensors="pt")
+                outputs = model.generate(**inputs)
+                answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                st.write(f"Answer: {answer}")
+    except Exception as e:
+        st.error(f"Error loading model or generating answer: {e}")
+        st.write("Please check your model and data.")
 
     # try:
     #     # Load model after Spark and data prep
