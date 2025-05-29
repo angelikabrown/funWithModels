@@ -158,17 +158,25 @@ def render_map(artist):
                 else:
                     # Get unique row indices of selected cells
                     num_cols = df_str.shape[1]
-                    selected_rows = list(set([coord[1].item() // num_cols for coord in selected_coords]))
+                    selected_rows = set()
+                    for coord in selected_coords:
+                        cell_index = coord[0].item()
+                        row_idx = cell_index // num_cols
+                        if 0 <= row_idx < len(c):
+                            selected_rows.add(row_idx)
+                    selected_rows = sorted(selected_rows)
 
+                    if selected_rows:
                     # Build natural language answer for each selected row
-                    answers = []
-                    for row_idx in selected_rows:
-                        row = c.iloc[row_idx]
-                        sentence = f"In {row['state']}, {row['artist']} had {format_number(row['listens'])} listens."
-                        answers.append(sentence)
+                        answers = []
+                        for row_idx in selected_rows:
+                            row = c.iloc[row_idx]
+                            sentence = f"In {row['state']}, {row['artist']} had {format_number(row['listens'])} listens."
+                            answers.append(sentence)
 
                     final_answer = " ".join(answers)
                     st.markdown(f"**Answer:** {final_answer}")
+               
             except Exception as e:
                 st.error(f"Error generating answer: {e}")
 
