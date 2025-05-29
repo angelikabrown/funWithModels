@@ -147,9 +147,17 @@ def render_map(artist):
                     # Prepare the data for Tapas model
                     inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
                     outputs = model(**inputs)
-                    answers = tokenizer.convert_logits_to_answer(inputs, outputs.logits)
-                    predicted_answer = answers[0]
-                    st.markdown(f"**Answer:** {predicted_answer}")
+
+                    #extract predicted answer
+                    predicted_answer_coordinates = outputs.logits.argmax(dim=-1).tolist()
+                    predicted_answer = []
+                    for coord in predicted_answer_coordinates:
+                        if coord != -1:
+                            predicted_answer.append(df_str.iloc[coord])
+                    if predicted_answer:
+                        st.markdown(f"**Answer:** {predicted_answer}")
+                    else:
+                        st.markdown("**Answer:** No answer found.")
             except Exception as e:
                 st.error(f"Error generating answer: {e}")
     except Exception as e:
