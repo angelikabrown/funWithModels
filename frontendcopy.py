@@ -136,78 +136,78 @@ def render_map(artist):
             st.rerun()
     def format_number(n):
         return f"{int(n):,}"
-# load Tapas model
-    try:
-        tokenizer, model = load_tapas_model()
+# # load Tapas model
+#     try:
+#         tokenizer, model = load_tapas_model()
 
-        question = st.text_input("Ask a question about the data:", placeholder="e.g. How many listens in California?")
-        if question:
-            try:
-                df_str = c.astype(str)
+#         question = st.text_input("Ask a question about the data:", placeholder="e.g. How many listens in California?")
+#         if question:
+#             try:
+#                 df_str = c.astype(str)
 
-                # Tokenize and run TAPAS model
-                inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
-                outputs = model(**inputs)
+#                 # Tokenize and run TAPAS model
+#                 inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
+#                 outputs = model(**inputs)
 
-                # Get probabilities and selected cells (threshold 0.5)
-                probs = torch.sigmoid(outputs.logits)
-                selected_coords = (probs > 0.7).nonzero()
+#                 # Get probabilities and selected cells (threshold 0.5)
+#                 probs = torch.sigmoid(outputs.logits)
+#                 selected_coords = (probs > 0.7).nonzero()
 
-                if len(selected_coords) == 0:
-                    st.markdown("**Answer:** No answer found.")
-                else:
-                    # Get unique row indices of selected cells
-                    num_cols = df_str.shape[1]
-                    selected_rows = set()
-                    for coord in selected_coords:
-                        cell_index = coord[0].item()
-                        row_idx = cell_index // num_cols
-                        if 0 <= row_idx < len(c):
-                            selected_rows.add(row_idx)
-                    selected_rows = sorted(selected_rows)
+#                 if len(selected_coords) == 0:
+#                     st.markdown("**Answer:** No answer found.")
+#                 else:
+#                     # Get unique row indices of selected cells
+#                     num_cols = df_str.shape[1]
+#                     selected_rows = set()
+#                     for coord in selected_coords:
+#                         cell_index = coord[0].item()
+#                         row_idx = cell_index // num_cols
+#                         if 0 <= row_idx < len(c):
+#                             selected_rows.add(row_idx)
+#                     selected_rows = sorted(selected_rows)
 
-                    if selected_rows:
-                    # Build natural language answer for each selected row
-                        answers = []
-                        for row_idx in selected_rows:
-                            row = c.iloc[row_idx]
-                            sentence = f"In {row['state']}, {row['artist']} had {format_number(row['listens'])} listens."
-                            answers.append(sentence)
+#                     if selected_rows:
+#                     # Build natural language answer for each selected row
+#                         answers = []
+#                         for row_idx in selected_rows:
+#                             row = c.iloc[row_idx]
+#                             sentence = f"In {row['state']}, {row['artist']} had {format_number(row['listens'])} listens."
+#                             answers.append(sentence)
 
-                    final_answer = " ".join(answers)
-                    st.markdown(f"**Answer:** {final_answer}")
+#                     final_answer = " ".join(answers)
+#                     st.markdown(f"**Answer:** {final_answer}")
                
-            except Exception as e:
-                st.error(f"Error generating answer: {e}")
+#             except Exception as e:
+#                 st.error(f"Error generating answer: {e}")
 
-    except Exception as e:
-        st.error(f"Error generating answer: {e}")
-
-
+#     except Exception as e:
+#         st.error(f"Error generating answer: {e}")
 
 
-    # try:
-    #     # Load model after Spark and data prep
-    #     tokenizer, model = load_flan_model()
 
-    #     prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-    #     # Generate summary prompt
-    #     if not c.empty:
-    #         prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-    #         with st.spinner("Generating summary..."):   
-    #             # Tokenize and generate summary
-    #             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-    #             outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
-    #             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    try:
+        # Load model after Spark and data prep
+        tokenizer, model = load_flan_model()
+
+        prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
+        # Generate summary prompt
+        if not c.empty:
+            prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
+            with st.spinner("Generating summary..."):   
+                # Tokenize and generate summary
+                inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+                outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
+                summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                 
-    #             st.write(summary)
-    #             st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
-    #     else:
-    #         st.info("No data available to summarize for selected filters.")
-    # except Exception as e:
-    #     st.error(f"Error loading model or generating summary: {e}")
-    #     st.write("Please check your model and data.")
+                st.write(summary)
+                st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
+        else:
+            st.info("No data available to summarize for selected filters.")
+    except Exception as e:
+        st.error(f"Error loading model or generating summary: {e}")
+        st.write("Please check your model and data.")
 
 ### ------------------ MAIN UI: TAB 1 ------------------
 
