@@ -141,12 +141,14 @@ def render_map(artist):
         question = st.text_input("Ask a question about the data:", placeholder="e.g. How many listens in California?")
         if question:
             try:
+                df_str = c.astype(str)
                 with st.spinner("Generating answer..."):
                     # Prepare the data for Tapas model
-                    inputs = tokenizer(table=c, queries=[question], return_tensors="pt")
+                    inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
                     outputs = model(**inputs)
-                    answer = tokenizer.convert_logits_to_answer(inputs, outputs.logits)[0]
-                    st.markdown(f"**Answer:** {answer}")
+                    answers = tokenizer.convert_logits_to_answer(inputs, outputs.logits)
+                    predicted_answer = answers[0]
+                    st.markdown(f"**Answer:** {predicted_answer}")
             except Exception as e:
                 st.error(f"Error generating answer: {e}")
     except Exception as e:
