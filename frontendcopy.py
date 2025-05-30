@@ -144,16 +144,33 @@ def render_map(artist):
         try:
             tokenizer, model = load_t5_model()
 
-            def table_to_text(c):
-                rows = [f"In {row['state']}, {row['artist']} had {row['listens']} listens." for _, row in c.iterrows()]
-                return " ".join(rows)
+            def table_to_text(c, question):
+                """
+                Dynamically generate context based on the question.
+                """
+                if "most listens" in question.lower():
+                    # Focus on the state with the most listens
+                    top_state = c.loc[c["listens"].idxmax()]
+                    return f"In {top_state['state']}, {top_state['artist']} had {top_state['listens']} listens."
+                elif "least listens" in question.lower():
+                    # Focus on the state with the least listens
+                    least_state = c.loc[c["listens"].idxmin()]
+                    return f"In {least_state['state']}, {least_state['artist']} had {least_state['listens']} listens."
+                else:
+                    # Default: summarize the entire table
+                    rows = [f"In {row['state']}, {row['artist']} had {row['listens']} listens." for _, row in c.iterrows()]
+                    return " ".join(rows)
             question = st.text_input("Enter your question:", "Which state had the most listens?")
             if question:
                 try:
                     with st.spinner("Generating answer..."):
-                        context = table_to_text(c)
-                        prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
-                        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+                        context = table_to_text(c, question)
+                        prompt = f"""
+                                    Table: {context}
+                                    Question: {question}
+                                    Answer:
+                                    """
+                        inputs = tokenizer(prompt.strip(), return_tensors="pt", truncation=True, max_length=600)
                         outputs = model.generate(**inputs, max_new_tokens=50)
                         answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
                         st.markdown(f"**Answer:** {answer}")
