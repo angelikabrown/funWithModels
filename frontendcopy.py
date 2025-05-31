@@ -351,13 +351,13 @@ with tab2:
                         tokenizer, model = load_flan_model()
 
                         bottom_3 = get_bottom_3_artists(clean_listen)
-                        
+
                         prompt_text = engine.build_prompt_from_bottom_3(df=bottom_3)
                         
                         # prompt_text = engine.build_prompt_from_top10(df=bottom_artists_df)
                         # Generate summary prompt
-                        if bottom_3.empty:
-                            prompt_text = engine.build_prompt_from_top10(bottom_3)
+                        if not bottom_3.empty:
+                            prompt_text = engine.build_prompt_from_bottom_3(bottom_3)
                             with st.spinner("Generating summary..."):   
                                 # Tokenize and generate summary
                                 inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)

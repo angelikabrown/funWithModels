@@ -422,7 +422,7 @@ def build_prompt_from_map(df, state: str):
 
     return prompt
 
-def get_bottom_3_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.core.frame.DataFrame:
+def get_bottom_3_artists(df: pyspark.sql.dataframe.DataFrame) -> pd.core.frame.DataFrame:
     """
     Finds the bottom artists, ordered by play count.
 
@@ -434,26 +434,15 @@ def get_bottom_3_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd
     Returns:
         A PySpark DataFrame containing the top 10 artists and their counts.
     """
-    # if df is None:
-    #     print("Warning: df_listen is None. Ensure data loading was successful.")
-    #     return None
-
-    if state == 'Nationwide':
-        #title = "Top 10 National Artists"
-        filtered_df = df
-    else:
-        #title = f"Top 10 Artists in {selected_state}"
-        filtered_df = df.filter(col("state") == state)
-    
         
 
-    bottom_3_artists_df= filtered_df.groupBy("artist") \
+    bottom_3_artists_df= df.groupBy("artist") \
                                    .agg(count("*").alias("Total Streams")) \
-                                   .orderBy(desc("Total Streams")) \
-                                   .limit(10) 
+                                   .orderBy("Total Streams", ascending=True) \
+                                   .limit(3) 
     bottom_3_artists_df = bottom_3_artists_df.withColumnRenamed("artist", "Artist")
     
-    bottom_3_artists_df = bottom_3_artists_df.toPandas().sort_values(by='Total Streams', ascending=False)
+    bottom_3_artists_df = bottom_3_artists_df.toPandas()
 
     #print(title + ":")
     return bottom_3_artists_df
