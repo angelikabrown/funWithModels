@@ -66,8 +66,12 @@ def build_prommpt_from_dataframe(_df):
     return engine.build_prompt_from_dataframe(df=_df)
 
 @st.cache_data
-def bottom_artists(_df):
-    return engine.bottom_3_artists(df=load_data())
+def get_bottom_3_artists(_df):
+    return engine.get_bottom_3_artists(df=_df)
+
+@st.cache_data
+def build_prompt_from_bottom_artists(_df):
+    return engine.build_prompt_from_bottom_artists(df=_df)
 
 #load t5-small model
 @st.cache_resource
@@ -346,12 +350,14 @@ with tab2:
                     # Load model after Spark and data prep
                         tokenizer, model = load_flan_model()
 
-                        bottom_artists_df = bottom_artists(clean_listen)
-
+                        bottom_3 = get_bottom_3_artists(clean_listen)
+                        
+                        prompt_text = engine.build_prompt_from_bottom_3(df=bottom_3)
+                        
                         # prompt_text = engine.build_prompt_from_top10(df=bottom_artists_df)
                         # Generate summary prompt
-                        if bottom_artists_df.count() > 0:
-                            prompt_text = engine.build_prompt_from_top10(df=bottom_artists_df)
+                        if bottom_3.empty:
+                            prompt_text = engine.build_prompt_from_top10(bottom_3)
                             with st.spinner("Generating summary..."):   
                                 # Tokenize and generate summary
                                 inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)

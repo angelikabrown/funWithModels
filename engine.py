@@ -422,26 +422,46 @@ def build_prompt_from_map(df, state: str):
 
     return prompt
 
-def bottom_3_artists(df):
+def get_bottom_3_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.core.frame.DataFrame:
     """
-    Returns the bottom 3 artists based on total streams from the provided DataFrame.
+    Finds the bottom artists, ordered by play count.
 
     Args:
-        df: A Pandas DataFrame containing artist names and their total streams.
+        dataframe: An optional PySpark DataFrame. Defaults to the globally defined df_listen.
+        selected_state: An optional string representing the state to filter by.
+                        If None (default), it aggregates across all states.
 
     Returns:
-        A string summarizing the bottom 3 artists and their total streams.
+        A PySpark DataFrame containing the top 10 artists and their counts.
     """
-    if df.empty:
-        return "No data is available for the selected filters."
+    # if df is None:
+    #     print("Warning: df_listen is None. Ensure data loading was successful.")
+    #     return None
 
-    # Get the bottom 3 artists based on 'Total Streams'
-    bottom_artists = df.nsmallest(3, 'Total Streams')
+    if state == 'Nationwide':
+        #title = "Top 10 National Artists"
+        filtered_df = df
+    else:
+        #title = f"Top 10 Artists in {selected_state}"
+        filtered_df = df.filter(col("state") == state)
+    
+        
+
+    bottom_3_artists_df= filtered_df.groupBy("artist") \
+                                   .agg(count("*").alias("Total Streams")) \
+                                   .orderBy(desc("Total Streams")) \
+                                   .limit(10) 
+    bottom_3_artists_df = bottom_3_artists_df.withColumnRenamed("artist", "Artist")
+    
+    bottom_3_artists_df = bottom_3_artists_df.toPandas().sort_values(by='Total Streams', ascending=False)
+
+    #print(title + ":")
+    return bottom_3_artists_df
 
     
     return bottom_artists
 
-def build_prompt_from_top10(df):
+def build_prompt_from_bottom_3(df):
     """
     Builds a prompt for summarization from the top 10 artists DataFrame.
 
@@ -449,11 +469,10 @@ def build_prompt_from_top10(df):
     if df.empty:
         return "No data is available for the selected filters."
 
-    
     # Compose the data summary as plain text (no instructions embedded inside)
     data_summary = (
-       f"The lowest 3 artists are: {', '.join(df['Artist'].tail(3))} "
-       f"with listens: {', '.join(df['Total Streams'].tail(3).astype(str))}. "
+       f"The lowest 3 artists are: {', '.join(df['Artist'])} "
+       f"with listens: {', '.join(df['Total Streams'].astype(str))}. "
     )
 
     # Add the t5 prefix for summarization task
