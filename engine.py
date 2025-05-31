@@ -465,6 +465,6 @@ def build_prompt_from_bottom_3(df):
     )
 
     # Add the t5 prefix for summarization task
-    prompt = "summarize: " + data_summary
+    prompt = "summarize concisely: " + data_summary
 
     return prompt

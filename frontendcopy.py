@@ -361,10 +361,20 @@ with tab2:
                             with st.spinner("Generating summary..."):   
                                 # Tokenize and generate summary
                                 inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                                outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
+                                outputs = model.generate(**inputs, max_length=100, min_length=30, do_sample=False, top_p=0.95, top_k=50, num_beams=3)
                                 summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
+                                def capitalize_sentences(text):
+                                    sentences = text.split('. ')
+                                    capitalized_sentences = []
+                                    for sentence in sentences:
+                                        words = sentence.split()
+                                        capitalized_words = [word.capitalize() if word.islower() else word for word in words]
+                                        capitalized_sentence = ' '.join(capitalized_words)
+                                        capitalized_sentences.append(capitalized_sentence)
+                                    return '. '.join(capitalized_sentences)
                                 
+                                summary = capitalize_sentences(summary)
                                 st.write(summary)
                                 st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
                         else:
@@ -470,6 +480,18 @@ with tab2:
                             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
                             
+                            def capitalize_sentences(text):
+                                sentences = text.split('. ')
+                                capitalized_sentences = []
+                                for sentence in sentences:
+                                    words = sentence.split()
+                                    capitalized_words = [word.capitalize() if word.islower() else word for word in words]
+                                    capitalized_sentence = ' '.join(capitalized_words)
+                                    capitalized_sentences.append(capitalized_sentence)
+                                return '. '.join(capitalized_sentences)
+                                
+                            summary = capitalize_sentences(summary)
+
                             st.write(summary)
                             st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
 
