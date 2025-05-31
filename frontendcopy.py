@@ -346,10 +346,12 @@ with tab2:
                     # Load model after Spark and data prep
                         tokenizer, model = load_flan_model()
 
-                        prompt_text = engine.build_prompt_from_top10(df=load_data())
+                        bottom_artists_df = bottom_artists(clean_listen)
+
+                        # prompt_text = engine.build_prompt_from_top10(df=bottom_artists_df)
                         # Generate summary prompt
-                        if not bottom_artists.empty:
-                            prompt_text = engine.build_prompt_from_top10(df=load_data())
+                        if bottom_artists_df.count() > 0:
+                            prompt_text = engine.build_prompt_from_top10(df=bottom_artists_df)
                             with st.spinner("Generating summary..."):   
                                 # Tokenize and generate summary
                                 inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
