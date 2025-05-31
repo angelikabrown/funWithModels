@@ -421,3 +421,24 @@ def build_prompt_from_map(df, state: str):
     prompt = "summarize: " + data_summary
 
     return prompt
+
+def build_prompt_from_top10(df):
+    """
+
+    Builds a prompt for summarization from the top 10 artists DataFrame.
+
+    """
+    if df.empty:
+        return "No data is available for the selected filters."
+
+    
+    # Compose the data summary as plain text (no instructions embedded inside)
+    data_summary = (
+       f"The lowest 3 artists are: {', '.join(df['Artist'].tail(3))} "
+       f"with listens: {', '.join(df['Total Streams'].tail(3).astype(str))}. "
+    )
+
+    # Add the t5 prefix for summarization task
+    prompt = "summarize: " + data_summary
+
+    return prompt
