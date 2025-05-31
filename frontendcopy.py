@@ -107,11 +107,7 @@ clean_listen = get_clean_data()
 
 def render_map(artist):
     c = get_map_data(clean_listen, artist)
-    #show first 5 rows of the map data
-    if c.empty:
-        st.error(f"No data available for artist: {artist}")
-        return
-    st.write(c.head(5))
+    
 
     fig = go.Figure(data=go.Choropleth(
         locations=c.state,
@@ -156,6 +152,18 @@ def render_map(artist):
                     # Focus on the state with the least listens
                     least_state = c.loc[c["listens"].idxmin()]
                     return f"In {least_state['state']}, {least_state['artist']} had {least_state['listens']} listens."
+                elif "top artist" in question.lower():
+                    # Focus on the top artist in the selected state
+                    top_artist = c.loc[c["listens"].idxmax()]
+                    return f"The top artist in {top_artist['state']} is {top_artist['artist']} with {top_artist['listens']} listens."
+                elif "bottom artist" in question.lower():
+                    # Focus on the bottom artist in the selected state
+                    bottom_artist = c.loc[c["listens"].idxmin()]
+                    return f"The bottom artist in {bottom_artist['state']} is {bottom_artist['artist']} with {bottom_artist['listens']} listens."
+                elif "total listens" in question.lower():
+                    # Focus on the total listens across all states
+                    total_listens = c["listens"].sum()
+                    return f"The total listens across all states is {total_listens}."
                 else:
                     # Default: summarize the entire table
                     rows = [f"In {row['state']}, {row['artist']} had {row['listens']} listens." for _, row in c.iterrows()]
