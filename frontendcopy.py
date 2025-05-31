@@ -65,6 +65,10 @@ def create_pie(_df, state):
 def build_prommpt_from_dataframe(_df):
     return engine.build_prompt_from_dataframe(df=_df)
 
+@st.cache_data
+def build_prompt_from_top10(_df):
+    return engine.build_prompt_from_top10(df=_df)
+
 #load t5-small model
 @st.cache_resource
 def load_flan_model():
@@ -338,6 +342,11 @@ with tab2:
                         st.session_state.option = selected_artist
                         st.rerun()
             
+                try:
+                    # Load model after Spark and data prep
+                        tokenizer, model = load_flan_model()
+
+                        prompt_text = engine.build_prompt_from_top10(top_10)
         
             with st.container():
                 # KPI metrics
