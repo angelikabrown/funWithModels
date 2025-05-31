@@ -422,9 +422,27 @@ def build_prompt_from_map(df, state: str):
 
     return prompt
 
+def bottom_3_artists(df):
+    """
+    Returns the bottom 3 artists based on total streams from the provided DataFrame.
+
+    Args:
+        df: A Pandas DataFrame containing artist names and their total streams.
+
+    Returns:
+        A string summarizing the bottom 3 artists and their total streams.
+    """
+    if df.empty:
+        return "No data is available for the selected filters."
+
+    # Get the bottom 3 artists based on 'Total Streams'
+    bottom_artists = df.nsmallest(3, 'Total Streams')
+
+    
+    return bottom_artists
+
 def build_prompt_from_top10(df):
     """
-
     Builds a prompt for summarization from the top 10 artists DataFrame.
 
     """
