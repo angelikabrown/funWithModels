@@ -351,6 +351,10 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
     
     return top_songs_pd
 
+
+                # ---- AI Summary Propmpts -----
+
+
 def build_prompt_from_dataframe(df):
     """
 
@@ -448,7 +452,7 @@ def get_bottom_3_artists(df: pyspark.sql.dataframe.DataFrame) -> pd.core.frame.D
     return bottom_3_artists_df
 
     
-    return bottom_artists
+    
 
 def build_prompt_from_bottom_3(df):
     """
