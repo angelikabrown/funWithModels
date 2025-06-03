@@ -80,13 +80,6 @@ def load_flan_model():
     model = T5ForConditionalGeneration.from_pretrained("t5-small")
     return tokenizer, model
 
-#load tapas model
-@st.cache_resource
-def load_tapas_model():
-    model_name = "google/tapas-base-finetuned-wtq"
-    tokenizer = TapasTokenizer.from_pretrained(model_name)
-    model = TapasForQuestionAnswering.from_pretrained(model_name)
-    return tokenizer, model
 @st.cache_resource
 def load_t5_model():
     model_name = "google/flan-t5-small"
@@ -196,122 +189,7 @@ def render_map(artist):
                     st.error(f"Error generating answer: {e}")
         except Exception as e:
             st.error(f"Error loading T5 model: {e}")
-        
-
     
-    # try:
-    #     tokenizer, model = load_tapas_model()
-
-    #     question = ["How many listens are in CA?"]
-    #     if question:
-    #         try:
-    #             df_str = c.astype(str)
-    #             with st.spinner("Generating answer..."):
-    #                 # Prepare the data for Tapas model
-    #                 inputs = tokenizer(table=df_str, queries=question, padding="max_length", return_tensors="pt")
-    #                 outputs = model(**inputs)
-
-    #                 probabilities = torch.sigmoid(outputs.logits)
-    #                 selected_cells = (probabilities > 0.5).nonzero(as_tuple=True)
-
-    #                 selected_rows = selected_cells[0].tolist()
-    #                 selected_cols = selected_cells[1].tolist()
-
-    #                 if selected_rows and selected_cols:
-    #                     # Create a DataFrame to hold the selected answers
-    #                     answers = []
-    #                     for row, col in zip(selected_rows, selected_cols):
-    #                         # Validate the indices before accessing the DataFrame
-    #                         if row < len(df_str) and col < len(df_str.columns):
-    #                             cell_value = df_str.iloc[row, col]
-    #                             answers.append(cell_value)
-    #                         else:
-    #                             st.warning(f"Skipping invalid index: row={row}, col={col}")
-    #                     if answers:
-    #                         human_readable_answer = " ".join(answers)
-    #                         st.markdown(f"**Answer:** {human_readable_answer}")
-    #                     else:
-    #                         st.markdown("**Answer:** No answer found.")
-            
-    #         except Exception as e:
-    #             st.error(f"Error generating answer: {e}")
-    # except Exception as e:
-    #     st.error(f"Error loading Tapas model: {e}")
-
-    # def format_number(n):
-    #     return f"{int(n):,}"
-# # load Tapas model
-#     try:
-#         tokenizer, model = load_tapas_model()
-
-#         question = st.text_input("Ask a question about the data:", placeholder="e.g. How many listens in California?")
-#         if question:
-#             try:
-#                 df_str = c.astype(str)
-
-#                 # Tokenize and run TAPAS model
-#                 inputs = tokenizer(table=df_str, queries=[question], return_tensors="pt")
-#                 outputs = model(**inputs)
-
-#                 # Get probabilities and selected cells (threshold 0.5)
-#                 probs = torch.sigmoid(outputs.logits)
-#                 selected_coords = (probs > 0.7).nonzero()
-
-#                 if len(selected_coords) == 0:
-#                     st.markdown("**Answer:** No answer found.")
-#                 else:
-#                     # Get unique row indices of selected cells
-#                     num_cols = df_str.shape[1]
-#                     selected_rows = set()
-#                     for coord in selected_coords:
-#                         cell_index = coord[0].item()
-#                         row_idx = cell_index // num_cols
-#                         if 0 <= row_idx < len(c):
-#                             selected_rows.add(row_idx)
-#                     selected_rows = sorted(selected_rows)
-
-#                     if selected_rows:
-#                     # Build natural language answer for each selected row
-#                         answers = []
-#                         for row_idx in selected_rows:
-#                             row = c.iloc[row_idx]
-#                             sentence = f"In {row['state']}, {row['artist']} had {format_number(row['listens'])} listens."
-#                             answers.append(sentence)
-
-#                     final_answer = " ".join(answers)
-#                     st.markdown(f"**Answer:** {final_answer}")
-               
-#             except Exception as e:
-#                 st.error(f"Error generating answer: {e}")
-
-#     except Exception as e:
-#         st.error(f"Error generating answer: {e}")
-
-
-
-
-    # try:
-    #     # Load model after Spark and data prep
-    #     tokenizer, model = load_flan_model()
-
-    #     prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-    #     # Generate summary prompt
-    #     if not c.empty:
-    #         prompt_text = engine.build_prompt_from_map(c, st.session_state.location)
-    #         with st.spinner("Generating summary..."):   
-    #             # Tokenize and generate summary
-    #             inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-    #             outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
-    #             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-                
-    #             st.write(summary)
-    #             st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
-    #     else:
-    #         st.info("No data available to summarize for selected filters.")
-    # except Exception as e:
-    #     st.error(f"Error loading model or generating summary: {e}")
-    #     st.write("Please check your model and data.")
 
 ### ------------------ MAIN UI: TAB 1 ------------------
 
