@@ -80,6 +80,7 @@ def load_flan_model():
     model = T5ForConditionalGeneration.from_pretrained("t5-small")
     return tokenizer, model
 
+#load flan-t5-small model
 @st.cache_resource
 def load_t5_model():
     model_name = "google/flan-t5-small"
