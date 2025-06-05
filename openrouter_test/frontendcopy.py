@@ -58,17 +58,6 @@ def top_free(_df, state):
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
 
-@st.cache_data
-def build_prommpt_from_dataframe(_df):
-    return engine.build_prompt_from_dataframe(df=_df)
-
-@st.cache_data
-def get_bottom_3_artists(_df):
-    return engine.get_bottom_3_artists(df=_df)
-
-@st.cache_data
-def build_prompt_from_bottom_artists(_df):
-    return engine.build_prompt_from_bottom_artists(df=_df)
 
 
 ### ------------------ INITIAL STATE ------------------
@@ -157,42 +146,6 @@ with tab2:
                         st.session_state.option = selected_artist
                         st.rerun()
             
-                try:
-                    # Load model after Spark and data prep
-                        tokenizer, model = load_flan_model()
-
-                        bottom_3 = get_bottom_3_artists(clean_listen)
-
-                        prompt_text = engine.build_prompt_from_bottom_3(df=bottom_3)
-                        
-                        # prompt_text = engine.build_prompt_from_top10(df=bottom_artists_df)
-                        # Generate summary prompt
-                        if not bottom_3.empty:
-                            prompt_text = engine.build_prompt_from_bottom_3(bottom_3)
-                            with st.spinner("Generating summary..."):   
-                                # Tokenize and generate summary
-                                inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                                outputs = model.generate(**inputs, max_length=100, min_length=30, do_sample=False, top_p=0.95, top_k=50, num_beams=3)
-                                summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-                                def capitalize_sentences(text):
-                                    sentences = text.split('. ')
-                                    capitalized_sentences = []
-                                    for sentence in sentences:
-                                        words = sentence.split()
-                                        capitalized_words = [word.capitalize() if word.islower() else word for word in words]
-                                        capitalized_sentence = ' '.join(capitalized_words)
-                                        capitalized_sentences.append(capitalized_sentence)
-                                    return '. '.join(capitalized_sentences)
-                                
-                                summary = capitalize_sentences(summary)
-                                st.write(summary)
-                                st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
-                        else:
-                            st.info("No data available to summarize for selected filters.")
-                except Exception as e:
-                    st.error(f"Error loading model or generating summary: {e}")
-                    st.write("Please check your model and data.")
         
             with st.container():
                 # KPI metrics
