@@ -2,8 +2,7 @@ import pandas as pd
 import pyspark
 from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
-from transformers import T5Tokenizer, T5ForConditionalGeneration
-import torch
+
 
 def load_flan_model():
     tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")

@@ -7,9 +7,6 @@ import altair as alt
 import requests
 import tempfile
 import time
-from transformers import T5Tokenizer, T5ForConditionalGeneration, TapasTokenizer, TapasForQuestionAnswering, AutoTokenizer, AutoModelForSeq2SeqLM
-import torch
-
 
 
 from pyspark.sql import SparkSession
@@ -73,20 +70,6 @@ def get_bottom_3_artists(_df):
 def build_prompt_from_bottom_artists(_df):
     return engine.build_prompt_from_bottom_artists(df=_df)
 
-#load t5-small model
-@st.cache_resource
-def load_flan_model():
-    tokenizer = T5Tokenizer.from_pretrained("t5-small")
-    model = T5ForConditionalGeneration.from_pretrained("t5-small")
-    return tokenizer, model
-
-#load flan-t5-small model
-@st.cache_resource
-def load_t5_model():
-    model_name = "google/flan-t5-small"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name).cpu()
-    return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -139,57 +122,6 @@ def render_map(artist):
             st.session_state.location = "Nationwide"
             st.rerun()
 
-        try:
-            tokenizer, model = load_t5_model()
-
-            def table_to_text(c, question):
-                """
-                Dynamically generate context based on the question.
-                """
-                if "most listens" in question.lower():
-                    # Focus on the state with the most listens
-                    top_state = c.loc[c["listens"].idxmax()]
-                    return f"In {top_state['state']}, {top_state['artist']} had {top_state['listens']} listens."
-                elif "least listens" in question.lower():
-                    # Focus on the state with the least listens
-                    least_state = c.loc[c["listens"].idxmin()]
-                    return f"In {least_state['state']}, {least_state['artist']} had {least_state['listens']} listens."
-                elif "top artist" in question.lower():
-                    # Focus on the top artist in the selected state
-                    top_artist = c.loc[c["listens"].idxmax()]
-                    return f"The top artist in {top_artist['state']} is {top_artist['artist']} with {top_artist['listens']} listens."
-                elif "bottom artist" in question.lower():
-                    # Focus on the bottom artist in the selected state
-                    bottom_artist = c.loc[c["listens"].idxmin()]
-                    return f"The bottom artist in {bottom_artist['state']} is {bottom_artist['artist']} with {bottom_artist['listens']} listens."
-                elif "total listens" in question.lower():
-                    # Focus on the total listens across all states
-                    total_listens = c["listens"].sum()
-                    return f"The total listens across all states is {total_listens}."
-                else:
-                    # Default: summarize the entire table
-                    rows = [f"In {row['state']}, {row['artist']} had {row['listens']} listens." for _, row in c.iterrows()]
-                    return " ".join(rows)
-            question = st.text_input("Enter your question:", "Which state had the most listens?")
-            if question:
-                try:
-                    with st.spinner("Generating answer..."):
-                        context = table_to_text(c, question)
-                        prompt = f"""
-                                    Table: {context}
-                                    Question: {question}
-                                    Answer:
-                                    """
-                        inputs = tokenizer(prompt.strip(), return_tensors="pt", truncation=True, max_length=600)
-                        outputs = model.generate(**inputs, max_new_tokens=50)
-                        answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
-                        st.markdown(f"**Answer:** {answer}")
-                        st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated answer</p>", unsafe_allow_html=True)         
-
-                except Exception as e:
-                    st.error(f"Error generating answer: {e}")
-        except Exception as e:
-            st.error(f"Error loading T5 model: {e}")
     
 
 ### ------------------ MAIN UI: TAB 1 ------------------
@@ -343,42 +275,7 @@ with tab2:
                 st.plotly_chart(line_fig)
 
  
-                try:
-                # Load model after Spark and data prep
-                    tokenizer, model = load_flan_model()
-
-                    prompt_text = engine.build_prompt_from_dataframe(listen_duration)
-
-                    # Generate summary prompt
-                    if not listen_duration.empty:
-                        prompt_text = engine.build_prompt_from_dataframe(listen_duration)
-                        with st.spinner("Generating summary..."):   
-                            # Tokenize and generate summary
-                            inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-                            outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
-                            summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-                            
-                            def capitalize_sentences(text):
-                                sentences = text.split('. ')
-                                capitalized_sentences = []
-                                for sentence in sentences:
-                                    words = sentence.split()
-                                    capitalized_words = [word.capitalize() if word.islower() else word for word in words]
-                                    capitalized_sentence = ' '.join(capitalized_words)
-                                    capitalized_sentences.append(capitalized_sentence)
-                                return '. '.join(capitalized_sentences)
-                                
-                            summary = capitalize_sentences(summary)
-
-                            st.write(summary)
-                            st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
-
-                    else:
-                            st.info("No data available to summarize for selected filters.")
-                except Exception as e:
-                    st.error(f"Error loading model or generating summary: {e}")
-                    st.write("Please check your model and data.")
+              
                 
         with col_table[1]:
             with st.container(border=True):
