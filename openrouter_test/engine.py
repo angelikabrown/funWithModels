@@ -4,6 +4,7 @@ from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp
 from pyspark.sql.types import StringType
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
 
 ############
 # Kunle
@@ -109,6 +110,19 @@ def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 ############
 # angel
 ############
+
+# Load environment variables from .env file
+load_dotenv() 
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+if OPENROUTER_API_KEY is None:
+    raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
+
+openrouter_client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
 
 def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     """
