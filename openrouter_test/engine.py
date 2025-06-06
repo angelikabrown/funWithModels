@@ -2,7 +2,8 @@ import pandas as pd
 import pyspark
 from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
-
+from openai import OpenAI
+import os
 
 ############
 # Kunle
