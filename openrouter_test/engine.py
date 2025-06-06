@@ -190,6 +190,8 @@ def generate_summary(df) -> str:
 
     # Convert the DataFrame to a string representation
     df_str = df.to_string(index=False)
+
+    # Prepare the prompt for the DeepSeek model
     prompt = f"""
     You are an expert data analyst.
     Analyze the following listening data and provide a concise summary of the total listening duration by subscription type (free vs. paid) and state.
@@ -215,7 +217,7 @@ def generate_summary(df) -> str:
         return f"An error occurred while generating the summary: {str(e)}"
     
 
-    
+
 ############
 # James
 ############
