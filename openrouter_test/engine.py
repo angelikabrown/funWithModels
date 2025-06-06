@@ -111,18 +111,7 @@ def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 # angel
 ############
 
-# Load environment variables from .env file
-load_dotenv() 
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-
-if OPENROUTER_API_KEY is None:
-    raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
-
-openrouter_client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
 
 def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     """
@@ -174,7 +163,59 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.fr
     return updated_listening_duration_pd
 
 
+# Load environment variables from .env file
+load_dotenv() 
 
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+if OPENROUTER_API_KEY is None:
+    raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
+
+openrouter_client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
+
+def generate_summary(df) -> str:
+    """
+    Generates a summary of listening duration using OpenRouter's DeepSeek model.
+    Args:
+        df: A PySpark DataFrame with listening data.
+        state: A string representing the state to filter by.
+    Returns:
+        A string containing the summary of listening duration.
+    """
+    if df.empty:
+        return "No listening data is available for the selected filters."
+
+    # Convert the DataFrame to a string representation
+    df_str = df.to_string(index=False)
+    prompt = f"""
+    You are an expert data analyst.
+    Analyze the following listening data and provide a concise summary of the total listening duration by subscription type (free vs. paid) and state.
+    The data is as follows:
+    {df_str}
+    Provide the summary in a clear and concise manner, highlighting key insights. 
+
+    
+    """
+    try:
+        response = openrouter_client.chat.completions.create(
+            model="deepseek/deepseek-r1:free",
+            messages=[
+            
+                {"role": "user", "content": prompt}
+            ],
+           
+            temperature=0.7
+        )
+        summary = response.choices[0].message.content.strip()
+        return summary  
+    except Exception as e:
+        return f"An error occurred while generating the summary: {str(e)}"
+    
+
+    
 ############
 # James
 ############
