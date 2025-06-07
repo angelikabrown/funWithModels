@@ -60,7 +60,7 @@ def create_pie(_df, state):
 
 @st.cache_data
 def generate_summary_deepseek_r1(_df):
-    return engine.generate_summary_deepseek_r1(df=_df)
+    return engine.generate_summary(df=_df)
 
 ### ------------------ INITIAL STATE ------------------
 
