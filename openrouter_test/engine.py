@@ -171,12 +171,11 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if OPENROUTER_API_KEY is None:
     raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
-else:
-    print(f"Loaded API Key: {OPENROUTER_API_KEY}") 
+
 
 openrouter_client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
+    api_key="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"
 )
 
 def generate_summary(df) -> str:
@@ -198,19 +197,19 @@ def generate_summary(df) -> str:
     Analyze the following listening data and provide a concise summary of the total listening duration by subscription type (free vs. paid) and state.
     The data is as follows:
     {df_str}
-    Provide the summary in a clear and concise manner, highlighting key insights. 
-
+    Your summary must be 3 sentences or less.
+    Get right into the summary, no need to say "Here is the summary" or "The summary is" or anything like that.
     
     """
-
     try:
         # Use the OpenRouter client to generate a summary
         response = openrouter_client.chat.completions.create(
-            model="deepseek/deepseek-r1:free",
+            model="google/gemma-3n-e4b-it:free",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
+            
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            temperature=0.4,  # Adjust temperature for creativity
         )
         
         # Extract the content from the response
@@ -218,6 +217,44 @@ def generate_summary(df) -> str:
         return summary
     except Exception as e:
         return f"An error occurred while generating the summary: {e}"
+    # url = "https://openrouter.ai/api/v1/chat/completions"
+    # headers = {
+    #     "Authorization": f"Bearer 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",
+    #     "Content-Type": "application/json"
+    # }
+    # data = {
+    #     "model":"google/gemma-3n-e4b-it:free",
+    #     "messages": [
+    #         {"role": "system", "content": "You are a helpful assistant."},
+    #         {"role": "user", "content": prompt}
+    #     ]
+        
+    # }
+    # response = requests.post(url, headers=headers, json=data)
+    # if response.status_code == 200:
+    #     response_data = response.json()
+    #     if 'choices' in response_data and len(response_data['choices']) > 0:
+    #         summary = response_data['choices'][0]['message']['content']
+    #         return summary
+    #     else:
+    #         return "No summary generated. Please check the response format."
+    # else:
+    #     return f"Error: {response.status_code} - {response.text}"
+    # try:
+    #     # Use the OpenRouter client to generate a summary
+    #     response = openrouter_client.chat.completions.create(
+    #         model="deepseek/deepseek-r1:free",
+    #         messages=[
+    #             {"role": "system", "content": "You are a helpful assistant."},
+    #             {"role": "user", "content": prompt}
+    #         ]
+    #     )
+        
+    #     # Extract the content from the response
+    #     summary = response.choices[0].message.content
+    #     return summary
+    # except Exception as e:
+    #     return f"An error occurred while generating the summary: {e}"
     #     response = requests.post(
     #         "https://openrouter.ai/api/v1/chat/completions", # Changed endpoint!
     #         headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
