@@ -231,7 +231,6 @@ with tab2:
 
                 st.plotly_chart(line_fig)
                 st.markdown("---") # Optional: Add a separator for better visual distinction
-                st.subheader(f"Listening Duration Summary for {chart_state}")
 
                 # Display a spinner while the summary is being generated
                 with st.spinner("Generating summary with DeepSeek R1..."):
