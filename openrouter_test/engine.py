@@ -5,7 +5,7 @@ from pyspark.sql.types import StringType
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
-import requests
+import json
 
 ############
 # Kunle
@@ -164,19 +164,23 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.fr
     return updated_listening_duration_pd
 
 
-# Load environment variables from .env file
-load_dotenv() 
+#Load environment variables from .env file
+# load_dotenv() 
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+# OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
+# if OPENROUTER_API_KEY is None:
+#     raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
+
+with open('config.json', 'r') as config_file:
+    config = json.load(config_file)
+OPENROUTER_API_KEY = config.get("OPENROUTER_API_KEY")
 if OPENROUTER_API_KEY is None:
-    raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
-
+    raise ValueError("OPENROUTER_API_KEY not found in config.json. Please ensure it's set correctly.")
 
 openrouter_client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key="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"
-)
+    api_key=OPENROUTER_API_KEY)
 
 def generate_summary(df) -> str:
     """
@@ -191,7 +195,7 @@ def generate_summary(df) -> str:
     # Convert the DataFrame to a string representation
     df_str = df.to_string(index=False)
 
-    # Prepare the prompt for the DeepSeek model
+    # Prepare the prompt for the model
     prompt = f"""
     You are an expert data analyst.
     Analyze the following listening data and provide a concise summary of the total listening duration by subscription type (free vs. paid) and state.

@@ -230,13 +230,13 @@ with tab2:
                 )
 
                 st.plotly_chart(line_fig)
-                st.markdown("---") # Optional: Add a separator for better visual distinction
-
+                
                 # Display a spinner while the summary is being generated
-                with st.spinner("Generating summary with DeepSeek R1..."):
+                with st.spinner("Generating summary..."):
                     summary_text = generate_summary(listen_duration)
                 
                 st.write(summary_text)
+                st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated answer</p>", unsafe_allow_html=True)  
 
 
  
