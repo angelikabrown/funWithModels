@@ -179,7 +179,7 @@ openrouter_client = OpenAI(
     api_key=OPENROUTER_API_KEY,
 )
 
-def generate_summary(df, auth_token: str) -> str:
+def generate_summary(df) -> str:
     """
     Generates a summary of listening duration using OpenRouter's DeepSeek model.
     Args:
@@ -202,24 +202,20 @@ def generate_summary(df, auth_token: str) -> str:
 
     
     """
-    headers = {
-        "Authorization": f"Bearer {auth_token}",
-        "Content-Type": "application/json"
-    }
 
-    json_data = {
-        "model": "deepseek/deepseek-r1:free",
-        "messages": [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ]
-    }
     try:
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions", # Changed endpoint!
-            headers=headers,
-            json=json_data
+            headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
+            json={
+                "model": "deepseek/deepseek-r1:free",
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            }
         )
+        print(response.json())
         response.raise_for_status()  # Raise an error for bad responses
         return response.json()['choices'][0]['message']['content']
     except requests.exceptions.RequestException as e:
