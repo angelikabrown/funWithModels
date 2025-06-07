@@ -5,6 +5,7 @@ from pyspark.sql.types import StringType
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import requests
 
 ############
 # Kunle
@@ -170,13 +171,15 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if OPENROUTER_API_KEY is None:
     raise ValueError("OPENROUTER_API_KEY environment variable not set. Please ensure it's in your .env file or system environment.")
+else:
+    print(f"Loaded API Key: {OPENROUTER_API_KEY}") 
 
 openrouter_client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
 
-def generate_summary(df) -> str:
+def generate_summary(df, auth_token: str) -> str:
     """
     Generates a summary of listening duration using OpenRouter's DeepSeek model.
     Args:
@@ -185,8 +188,6 @@ def generate_summary(df) -> str:
     Returns:
         A string containing the summary of listening duration.
     """
-    if df.empty:
-        return "No listening data is available for the selected filters."
 
     # Convert the DataFrame to a string representation
     df_str = df.to_string(index=False)
@@ -201,22 +202,30 @@ def generate_summary(df) -> str:
 
     
     """
-    try:
-        response = openrouter_client.chat.completions.create(
-            model="deepseek/deepseek-r1:free",
-            messages=[
-            
-                {"role": "user", "content": prompt}
-            ],
-           
-            temperature=0.7
-        )
-        summary = response.choices[0].message.content.strip()
-        return summary  
-    except Exception as e:
-        return f"An error occurred while generating the summary: {str(e)}"
-    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "Content-Type": "application/json"
+    }
 
+    json_data = {
+        "model": "deepseek/deepseek-r1:free",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions", # Changed endpoint!
+            headers=headers,
+            json=json_data
+        )
+        response.raise_for_status()  # Raise an error for bad responses
+        return response.json()['choices'][0]['message']['content']
+    except requests.exceptions.RequestException as e:
+        return f"An error occurred: {e}"
+    
+    
 
 ############
 # James

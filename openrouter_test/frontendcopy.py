@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import engine
-from engine import generate_summary
+from engine import generate_summary, OPENROUTER_API_KEY
 import plotly.graph_objects as go
 import altair as alt
 import requests
@@ -11,6 +11,7 @@ import time
 
 
 from pyspark.sql import SparkSession
+
 
 ### ------------------ CACHED SETUP ------------------
 
@@ -234,7 +235,8 @@ with tab2:
 
                 # Display a spinner while the summary is being generated
                 with st.spinner("Generating summary with DeepSeek R1..."):
-                    summary_text = generate_summary(listen_duration)
+                    summary_text = generate_summary(listen_duration,
+                                                    auth_token={OPENROUTER_API_KEY})
                 
                 st.write(summary_text)
 
