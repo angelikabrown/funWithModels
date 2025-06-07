@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import engine
+from engine import generate_summary
 import plotly.graph_objects as go
 import altair as alt
 import requests
@@ -58,9 +59,9 @@ def top_free(_df, state):
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
 
-@st.cache_data
-def generate_summary_deepseek_r1(_df):
-    return engine.generate_summary(df=_df)
+# @st.cache_data
+# def generate_summary_deepseek_r1(_df):
+#     return engine.generate_summary(df=_df)
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -233,7 +234,7 @@ with tab2:
 
                 # Display a spinner while the summary is being generated
                 with st.spinner("Generating summary with DeepSeek R1..."):
-                    summary_text = generate_summary_deepseek_r1(listen_duration)
+                    summary_text = generate_summary(listen_duration)
                 
                 st.write(summary_text)
 
