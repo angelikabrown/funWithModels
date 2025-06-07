@@ -58,7 +58,9 @@ def top_free(_df, state):
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
 
-
+@st.cache_data
+def generate_summary_deepseek_r1(_df):
+    return engine.generate_summary_deepseek_r1(df=_df)
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -226,6 +228,15 @@ with tab2:
                 )
 
                 st.plotly_chart(line_fig)
+                st.markdown("---") # Optional: Add a separator for better visual distinction
+                st.subheader(f"Listening Duration Summary for {chart_state}")
+
+                # Display a spinner while the summary is being generated
+                with st.spinner("Generating summary with DeepSeek R1..."):
+                    summary_text = generate_summary_deepseek_r1(listen_duration)
+                
+                st.write(summary_text)
+
 
  
               
