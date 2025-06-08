@@ -191,6 +191,9 @@ def generate_summary(df) -> str:
     Returns:
         A string containing the summary of listening duration.
     """
+    if df.empty:
+        return "No data available to generate a summary."
+    
 
     # Convert the DataFrame to a string representation
     df_str = df.to_string(index=False)
@@ -199,9 +202,10 @@ def generate_summary(df) -> str:
     prompt = f"""
     You are an expert data analyst.
     Analyze the following listening data and provide a concise summary of the total listening duration by subscription type (free vs. paid) and state.
+    Include state specific insights if applicable.
     The data is as follows:
     {df_str}
-    Your summary must be 3 sentences or less.
+    Your summary must be 2 sentences or less.
     Get right into the summary, no need to say "Here is the summary" or "The summary is" or anything like that.
     
     """
