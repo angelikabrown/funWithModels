@@ -200,7 +200,9 @@ def generate_summary(df) -> str:
 
     # Prepare the prompt for the model
     prompt = f"""
-    You are an expert data analyst.
+    You are an expert data analyst with over 10 years of experience helping companies turn data into insights. You have been hired by a new music streaming service
+    to anylyze listening data in their first year of operation. 
+
     Analyze the following listening data and provide a concise summary of the total listening duration by subscription type (free vs. paid) and state.
     Include state specific insights if applicable.
     The data is as follows:
